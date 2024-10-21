@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analizador de Bolsa - MACD</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #333;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #lista-acciones, #resultados {
+            margin-top: 20px;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+        #lista-acciones ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        #lista-acciones li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Analizador de Bolsa - MACD</h1>
+        <div class="form-group">
+            <label for="archivo-excel">Seleccionar archivo Excel con lista de acciones:</label>
+            <input type="file" id="archivo-excel" accept=".xlsx, .xls" />
+        </div>
+        <button id="btn-cargar">Cargar</button>
+        <div id="lista-acciones">
+            <h2>Lista de Acciones</h2>
+            <ul id="acciones"></ul>
+        </div>
+        <div class="form-group">
+            <label for="simbolo">Seleccionar Acción:</label>
+            <select id="simbolo" name="simbolo" required>
+                <option value="">Seleccione una acción</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="fecha-inicio">Fecha de Inicio:</label>
+            <input type="date" id="fecha-inicio" name="fecha-inicio" required>
+        </div>
+        <div class="form-group">
+            <label for="fecha-fin">Fecha de Fin:</label>
+            <input type="date" id="fecha-fin" name="fecha-fin" required>
+        </div>
+        <button id="btn-analizar">Analizar</button>
+        <div id="resultados"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const btnCargar = document.getElementById('btn-cargar');
+            const btnAnalizar = document.getElementById('btn-analizar');
+            const inputArchivo = document.getElementById('archivo-excel');
+            const listaAcciones = document.getElementById('acciones');
+            const selectSimbolo = document.getElementById('simbolo');
+            const resultadosDiv = document.getElementById('resultados');
+
+            btnCargar.addEventListener('click', cargarAcciones);
+            btnAnalizar.addEventListener('click', analizarAccion);
+
+            function cargarAcciones() {
+                const archivo = inputArchivo.files[0];
+                if (!archivo) {
+                    alert('Por favor, seleccione un archivo Excel.');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const primerHoja = workbook.Sheets[workbook.SheetNames[0]];
+                    const acciones = XLSX.utils.sheet_to_json(primerHoja, {header: 1});
+
+                    listaAcciones.innerHTML = '';
+                    selectSimbolo.innerHTML = '<option value="">Seleccione una acción</option>';
+
+                    acciones.flat().forEach(accion => {
+                        if (accion) {  // Verificar que la acción no esté vacía
+                            const li = document.createElement('li');
+                            li.textContent = accion;
+                            listaAcciones.appendChild(li);
+
+                            const option = document.createElement('option');
+                            option.value = accion;
+                            option.textContent = accion;
+                            selectSimbolo.appendChild(option);
+                        }
+                    });
+
+                    alert('Lista de acciones cargada con éxito.');
+                };
+                reader.readAsArrayBuffer(archivo);
+            }
+
+            function analizarAccion() {
+                const simbolo = selectSimbolo.value;
+                const fechaInicio = document.getElementById('fecha-inicio').value;
+                const fechaFin = document.getElementById('fecha-fin').value;
+
+                if (!simbolo || !fechaInicio || !fechaFin) {
+                    alert('Por favor, complete todos los campos.');
+                    return;
+                }
+
+                // Simulación de análisis
+                resultadosDiv.innerHTML = 'Analizando...';
+
+                setTimeout(() => {
+                    // Acá solicito los datos al backend
+                    // const resultadoReal = mi_funcion_llama_al_backend(simbolo, fechaInicio, fechaFin);
+                    const resultadoSimulado = {
+                        ultimaSenal: 'Compra',
+                        fecha: '2023-10-15',
+                        macd: 1.23,
+                        senal: 0.98,
+                        histograma: 0.25
+                    };
+                    // mostrarResultados(resultadoReal);
+                    mostrarResultados(resultadoSimulado);
+                }, 2000);
+            }
+
+            function mostrarResultados(resultado) {
+                resultadosDiv.innerHTML = `
+                    <h2>Resultados del Análisis MACD</h2>
+                    <p><strong>Última Señal:</strong> ${resultado.ultimaSenal}</p>
+                    <p><strong>Fecha:</strong> ${resultado.fecha}</p>
+                    <p><strong>MACD:</strong> ${resultado.macd.toFixed(2)}</p>
+                    <p><strong>Señal:</strong> ${resultado.senal.toFixed(2)}</p>
+                    <p><strong>Histograma:</strong> ${resultado.histograma.toFixed(2)}</p>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
